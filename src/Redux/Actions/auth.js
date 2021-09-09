@@ -16,6 +16,7 @@ export const UserLogin = (formData, cb)=>{
             dispatch(UserLoginSuccess(res.data))
             cb(false)
         }).catch((err)=>{
+			console.log(err)
             alert(err.response.data.message)
             dispatch(UserLoginError(err))
             cb(false)

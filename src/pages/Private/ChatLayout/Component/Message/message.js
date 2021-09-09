@@ -5,29 +5,47 @@ import { useSelector, useDispatch } from 'react-redux';
 import { ChatList,NewMessage } from '../../../../../Redux/Actions/chatlist';
 import { GetMessage, SendMessage } from '../../../../../Redux/Actions/message'
 import { GetInfoUser } from '../../../../../Redux/Actions/user'
+import socket from '../../../../../helper/socket';
+import io from 'socket.io-client'
+
 const {REACT_APP_API_URL, REACT_APP_API_IMAGE_URL} = process.env
 
 const Message = (props) =>{
     let formData = new FormData();
     const [loading, setLoading] = useState(false)
+    const [update, setUpdate] = useState(false)
     const dispatch = useDispatch()
+
     const [data, setData] = useState({
         message : '',
         images : []
     })
-    const [updated, setUpdated] = useState(false)
+
+
     const { data:user } = useSelector((state)=> state.UserLogin)
     const { data:chat } = useSelector((state) => state.GetMessage)
     const { data:contact } = useSelector((state) => state.GetInfoUser)
+    socket.emit("join", {userId : user.data.id_user, roomId : props.chatroom});
     
-    React.useEffect(()=>{
-        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user))
-    },[props,updated])
+    socket.on("message", (data)=>{
+        if(!update){
+            setUpdate(true);
+        }
+    })
 
     React.useEffect(()=>{
-        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user))
-    },[props,updated])
+        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
+        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
+    },[])
 
+    React.useEffect(()=>{
+        if(update){
+            setTimeout(() => {
+                dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
+              }, 1000);
+            setUpdate(false);
+        }
+    },[update])
     const newFormData = () =>{
         formData.append('message',data.message);
         for(let i=0; i < data.images.length; i++){
@@ -43,7 +61,7 @@ const Message = (props) =>{
         if(data.message != null || data.images.length > 0){
             newFormData()
             dispatch(SendMessage(user.data.token,props.chatroom,user.data.id_user,formData))
-            setUpdated(!updated)
+            socket.emit("send message", {userId : user.data.id_user, roomId : props.chatroom})
             setData({message : '',images : []})
         }else{
             return false
