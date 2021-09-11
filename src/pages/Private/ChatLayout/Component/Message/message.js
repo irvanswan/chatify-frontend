@@ -28,24 +28,20 @@ const Message = (props) =>{
     socket.emit("join", {userId : user.data.id_user, roomId : props.chatroom});
     
     socket.on("message", (data)=>{
-        if(!update){
+        if(data.roomId == props.chatroom){
+            console.log(data);
             setUpdate(true);
         }
     })
 
     React.useEffect(()=>{
-        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
         dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
-    },[])
+    },[update])
 
     React.useEffect(()=>{
-        if(update){
-            setTimeout(() => {
-                dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
-              }, 1000);
-            setUpdate(false);
-        }
-    },[update])
+        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
+
+    },[props])
     const newFormData = () =>{
         formData.append('message',data.message);
         for(let i=0; i < data.images.length; i++){
@@ -62,6 +58,7 @@ const Message = (props) =>{
             newFormData()
             dispatch(SendMessage(user.data.token,props.chatroom,user.data.id_user,formData))
             socket.emit("send message", {userId : user.data.id_user, roomId : props.chatroom})
+            setUpdate(true);
             setData({message : '',images : []})
         }else{
             return false
