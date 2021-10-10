@@ -25,23 +25,31 @@ const Message = (props) =>{
     const { data:user } = useSelector((state)=> state.UserLogin)
     const { data:chat } = useSelector((state) => state.GetMessage)
     const { data:contact } = useSelector((state) => state.GetInfoUser)
+
+    const [message, setMessage] = useState({});
+
     socket.emit("join", {userId : user.data.id_user, roomId : props.chatroom});
     
-    socket.on("message", (data)=>{
-        if(data.roomId == props.chatroom){
-            console.log(data);
-            setUpdate(true);
-        }
+    socket.once("message", (data)=>{
+        socket.disconnect();
+        modedungu();
+        
     })
-
-    React.useEffect(()=>{
+    function modedungu(){
+        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
         dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
-    },[update])
-
+    }
     React.useEffect(()=>{
         dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
-
+        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
     },[props])
+
+   /*  React.useEffect(()=>{
+        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
+        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
+        console.log('ini pesan barunya : ', chat)
+    }, [update]); */
+
     const newFormData = () =>{
         formData.append('message',data.message);
         for(let i=0; i < data.images.length; i++){
@@ -57,8 +65,7 @@ const Message = (props) =>{
         if(data.message != null || data.images.length > 0){
             newFormData()
             dispatch(SendMessage(user.data.token,props.chatroom,user.data.id_user,formData))
-            socket.emit("send message", {userId : user.data.id_user, roomId : props.chatroom})
-            setUpdate(true);
+            socket.emit("send message", {userId : user.data.id_user, roomId : props.chatroom, message : data.message})
             setData({message : '',images : []})
         }else{
             return false

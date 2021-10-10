@@ -9,11 +9,9 @@ const Chatlist = () => {
   useEffect(() => {
     let component = document.getElementById("sidebar");
     if (visible) {
-      console.log("block");
       component.classList.add("d-block");
       component.classList.remove("d-none");
     } else {
-      console.log("none");
       component.classList.add("d-none");
       component.classList.remove("d-block");
     }

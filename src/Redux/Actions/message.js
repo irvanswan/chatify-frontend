@@ -35,7 +35,7 @@ export const SendMessage = (userToken, id_chatroom,id_participiant,formData)=>{
             },
             data : formData
         }).then((res)=>{
-            console.log(formData)
+            /* console.log(formData) */
             dispatch(SendMessageSuccess(res.data))
         }).catch((err)=>{
             console.log(err.response)
