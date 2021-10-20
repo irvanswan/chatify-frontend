@@ -92,3 +92,23 @@ export const GetInfoUser = (state = initialState, action = {}) => {
             return state
     }
 }
+
+export const GetProfile = (state = initialState, action = {}) => {
+    switch(action.type){
+        case 'GET_PROFILE_SUCCESS' :
+            return{
+                ...state,
+                loading: false,
+                data: action.payload
+            }
+        case 'GGET_PROFILE_FAILED' :
+            return{
+                ...state,
+                loading: false,
+                error: action.payload,
+                data: [],
+            }
+        default :
+            return state
+    }
+}

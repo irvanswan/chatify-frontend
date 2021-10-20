@@ -18,3 +18,16 @@ export const GetInfoUser = (userToken, id_chatroom, id_user)=>{
         })   
     }
 }
+
+const GetProfileSuccess = (data) =>{ return {type : 'GET_PROFILE_SUCCESS', payload : data}}
+const GetProfileFailed = (error)=>{return {type : 'GET_PROFILE_FAILED', payload : error}}
+
+export const GetProfile = (id_user)=>{
+    return (dispatch)=>{
+        return axios.get(`${process.env.REACT_APP_API_URL}users/${id_user}`).then((res)=>{
+            dispatch(GetProfileSuccess(res))
+        }).catch((err)=>{
+            dispatch(GetProfileFailed(err))
+        })
+    }
+}

@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux';
 import { ChatList,NewMessage } from '../../../../../Redux/Actions/chatlist';
 import { GetMessage, SendMessage } from '../../../../../Redux/Actions/message'
-import { GetInfoUser } from '../../../../../Redux/Actions/user'
+import { GetInfoUser, GetProfile } from '../../../../../Redux/Actions/user'
 import socket from '../../../../../helper/socket';
 import io from 'socket.io-client'
 
@@ -15,34 +15,45 @@ const Message = (props) =>{
     const [loading, setLoading] = useState(false)
     const [update, setUpdate] = useState(false)
     const dispatch = useDispatch()
+    const [chat, setChat] = useState([]);
 
     const [data, setData] = useState({
         message : '',
         images : []
     })
-
-
+    const { data:chating } = useSelector((state) => state.GetMessage)
     const { data:user } = useSelector((state)=> state.UserLogin)
-    const { data:chat } = useSelector((state) => state.GetMessage)
     const { data:contact } = useSelector((state) => state.GetInfoUser)
+    const {data : profile} = useSelector((state)=>state.GetProfile);
 
-    const [message, setMessage] = useState({});
+    React.useEffect(()=>{
+        setChat([...chating]);
+    },[chating])
 
     socket.emit("join", {userId : user.data.id_user, roomId : props.chatroom});
     
     socket.once("message", (data)=>{
-        socket.disconnect();
-        modedungu();
-        
+        if(data.roomId == props.chatroom){
+            socket.emit('delivered', {status : 'delivered'})
+            setChat([...chat, data])
+        }
     })
-    function modedungu(){
-        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
-        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
+
+    socket.once("response", (data)=>{
+        if(data.roomId == props.chatroom){
+            setUpdate(true);
+        }
+    })
+    console.log('profile : ', profile?.data?.data[0]?.photo);
+    function getInfo(){
+        dispatch(GetInfoUser(user.data.token,props.chatroom, user.data.id_user));
+        dispatch(GetMessage(user.data.token,props.chatroom, user.data.id_user));
+        dispatch(GetProfile(user.data.id_user));
     }
+
     React.useEffect(()=>{
-        dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
-        dispatch(GetMessage(user.data.token,props.chatroom,user.data.id_user));
-    },[props])
+        getInfo()
+    },[props, update])
 
    /*  React.useEffect(()=>{
         dispatch(GetInfoUser(user.data.token,props.chatroom,user.data.id_user));
@@ -65,7 +76,7 @@ const Message = (props) =>{
         if(data.message != null || data.images.length > 0){
             newFormData()
             dispatch(SendMessage(user.data.token,props.chatroom,user.data.id_user,formData))
-            socket.emit("send message", {userId : user.data.id_user, roomId : props.chatroom, message : data.message})
+            socket.emit("send message", {user1 : user.data.id_user, roomId : props.chatroom, message : data.message, photo : profile.data.data[0].photo})
             setData({message : '',images : []})
         }else{
             return false
